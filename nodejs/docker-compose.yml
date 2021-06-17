@@ -2,8 +2,8 @@ version: "3.7"
 
 services:
   cloudtalk:
-    image: node:lts-alpine
+    image: node:12
     volumes:
       - ./:/app/
     working_dir: /app
-    command: ash -c "npm install && node index.js"
+    command: bash -c "npm install && node index.js"
