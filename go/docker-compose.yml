@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  cloudtalk:
+    image: golang:1.16-alpine
+    volumes:
+      - ./:/go/src/cloudtalk
+    working_dir: /go/src/cloudtalk
+    command: ash -c "go run main.go"
