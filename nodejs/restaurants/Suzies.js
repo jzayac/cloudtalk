@@ -1,6 +1,7 @@
 const Fetch = require('./abstract/Fetch');
 const Restaurant = require('../model/Restaurant');
 const HTMLParser = require('node-html-parser');
+const moment = require('moment');
 
 class Suzies extends Fetch {
   constructor(renderFunc) {
@@ -18,43 +19,49 @@ class Suzies extends Fetch {
     const root = HTMLParser.parse(this.body);
     const rows = root.querySelectorAll('#weekly-menu .day');
 
-    rows.map((item) => {
+    const today = rows.filter((item) => {
       const row = HTMLParser.parse(item.childNodes);
       const title = row.querySelector('h4').text;
-      const [dayName, date] = title.split(' ');
+      const date = title.split(' ')[1];
+      const todayDate = moment().startOf('day');
+      const offerDate = moment(date, 'DD.MM');
+      return todayDate.isSame(offerDate);
+    })[0];
 
-      const food = row.querySelectorAll('.item');
+    const row = HTMLParser.parse(today.childNodes);
+    const title = row.querySelector('h4').text;
+    const [dayName, date] = title.split(' ');
 
-      const dayOffer = [];
+    const food = row.querySelectorAll('.item');
 
-      food.map((item2) => {
-        const row2 = HTMLParser.parse(item2.childNodes);
+    const dayOffer = [];
 
-        let descriptionElement = row2.querySelector('.title');
+    food.map((item2) => {
+      const row2 = HTMLParser.parse(item2.childNodes);
 
-        if (!descriptionElement) {
-          descriptionElement = row2.querySelector('.text');
-        }
+      let descriptionElement = row2.querySelector('.title');
 
-        let description =
-          (descriptionElement && descriptionElement.text) || '';
+      if (!descriptionElement) {
+        descriptionElement = row2.querySelector('.text');
+      }
 
-        description = description.replace(/\s/g, ' ').trim()
+      let description = (descriptionElement && descriptionElement.text) || '';
 
-        if (description.length > 50) {
-          description = description.substring(0, 49) + "...";
-        }
+      description = description.replace(/\s/g, ' ').trim();
 
-        const priceElement = row2.querySelector('.price');
-        const price = (priceElement && priceElement.text) || '';
-        dayOffer.push({
-          description:
-            description.replace(/\s/g, ' ').trim() + '  ' + price.trim() + " Kc",
-        });
+      if (description.length > 50) {
+        description = description.substring(0, 49) + '...';
+      }
+
+      const priceElement = row2.querySelector('.price');
+      const price = (priceElement && priceElement.text) || '';
+      dayOffer.push({
+        description:
+          description.replace(/\s/g, ' ').trim() + '  ' + price.trim() + ' Kc',
       });
-
-      restaurant.pushDay(dayName, date, dayOffer);
     });
+
+    restaurant.pushDay(dayName, date, dayOffer);
 
     return restaurant;
   }

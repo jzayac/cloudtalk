@@ -1,5 +1,5 @@
 const axios = require('axios');
-// const iconv  = require('iconv').Iconv;
+const Iconv  = require('iconv').Iconv;
 // const iconv  = require('iconv');
 
 class Fetch {
@@ -36,6 +36,14 @@ class Fetch {
 
   async fetch() {
     try {
+      const iconv = new Iconv('UTF-8', 'ISO-8859-1');
+      axios.interceptors.response.use(function (response) {
+        const ctype = response.headers["content-type"];
+        response.data = ctype.includes("charset=GB2312") ?
+          iconv.decode(response.data, 'gb2312') :
+          iconv.decode(response.data, 'utf-8');
+        return response;
+      })
       const response = await axios.get(this.url);
       this.body = response.data;
     } catch (error) {

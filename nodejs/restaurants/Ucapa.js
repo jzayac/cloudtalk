@@ -1,6 +1,7 @@
 const Fetch = require('./abstract/Fetch');
 const Restaurant = require('../model/Restaurant');
 const HTMLParser = require('node-html-parser');
+const moment = require('moment');
 
 class Ucapa extends Fetch {
   constructor(renderFunc) {
@@ -18,20 +19,26 @@ class Ucapa extends Fetch {
     const root = HTMLParser.parse(this.body);
     const rows = root.querySelectorAll('.row.mb-4');
 
-    rows.map((item) => {
+    const today = rows.filter((item) => {
       const row = HTMLParser.parse(item.childNodes);
-      const dayName = row.querySelector('.day').text;
       const date = row.querySelector('.date').text;
-      const food = row.querySelectorAll('.row');
+      const todayDate = moment().startOf('day');
+      const offerDate = moment(date, 'DD. MM. YYYY');
+      return todayDate.isSame(offerDate);
+    })[0];
 
-      const dayOffer = [];
+    const row = HTMLParser.parse(today.childNodes);
+    const dayName = row.querySelector('.day').text;
+    const date = row.querySelector('.date').text;
+    const food = row.querySelectorAll('.row');
 
-      food.map((item2) => {
-        dayOffer.push({ description: item2.text.replace(/\s/g, ' ').trim() });
-      });
+    const dayOffer = [];
 
-      restaurant.pushDay(dayName, date, dayOffer);
+    food.map((item2) => {
+      dayOffer.push({ description: item2.text.replace(/\s/g, ' ').trim() });
     });
+
+    restaurant.pushDay(dayName, date, dayOffer);
 
     return restaurant;
   }
